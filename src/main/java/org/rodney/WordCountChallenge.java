@@ -17,8 +17,9 @@ public class WordCountChallenge {
         try (Stream<String> stream = Files.lines(Paths.get(input_file))) {
 
             Map<String,Long> word_counts = stream
-                    .flatMap(line -> Arrays.stream(line.split("\\s+")))
                     .map(String::toLowerCase)
+                    .flatMap(line -> Arrays.stream(line.split("\\s+")))
+                    .filter(word -> word.length()>0)
                             .collect(
                                     Collectors.groupingBy(
                                             Function.identity(),
