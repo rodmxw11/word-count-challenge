@@ -27,7 +27,7 @@ public class WordCountChallenge {
                                             ));
             word_counts.entrySet().stream()
                     .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                    .limit(20)
+                    .limit(40)
                     .forEach(entry -> System.out.println(
                             String.format("%8d  %s",entry.getValue(), entry.getKey())
                     ));
