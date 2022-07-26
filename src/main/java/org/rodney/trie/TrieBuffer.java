@@ -116,30 +116,58 @@ public class TrieBuffer {
         }
     }
 
-    public static class WordsAndCounts {
-        protected final String[] words;
-        protected final int[] counts;
-        int word_index = 0;
-        public WordsAndCounts(int size) {
-            words = new String[size];
-            counts = new int[size];
+
+
+    public static class WalkTrieNodes {
+        char[] trie_buffer_local;
+        char[] char_stack;
+        int stack_depth = 0;
+        WordsAndCounts results;
+
+        public WalkTrieNodes(
+                char[] trie_buffer,
+                int word_count
+        ) {
+            trie_buffer_local = trie_buffer;
+            char_stack = new char[word_count];
+            results = new WordsAndCounts(word_count);
         }
 
-        public void push(String word, int count) {
-            words[word_index] = word;
-            counts[word_index] = count;
-            word_index++;
+        public void walk_trie_node_recurse(char node_index) {
+            if (node_index==CHAR_0) {
+                return;
+            }
+            int node_start = compute_trie_buffer_offset(node_index);
+            int word_count =
+                    (trie_buffer_local[node_start+LETTERS_ARRAY_SIZE]<<16)
+                    +
+                    (trie_buffer_local[node_start+LETTERS_ARRAY_SIZE+1])
+                    ;
+            if (word_count!=0) {
+                String word = new String(char_stack, 0, stack_depth);
+                results.push(word, word_count);
+            }
+
+            for (int i=0;i<LETTERS_ARRAY_SIZE;i++) {
+                char next_trie_node = trie_buffer_local[node_start+i];
+                if (next_trie_node==CHAR_0) {
+                    continue;
+                }
+                // found a new letter ...
+                //     push new letter onto char stack
+                char_stack[stack_depth++] = (char)(LITTLE_A+i);
+
+                //     *recurse* to new trie node
+                walk_trie_node_recurse(next_trie_node);
+
+                //     pop letter off char stack
+                stack_depth--;
+            } //endfor i
         }
-    }
-    public Object[] get_words_and_counts() {
-        char[] word_buffer = new char[256];
-        char[] trie_node_stack = new char[256];
-        int[] index_counts = new int[256];
-        int current_index_offset = 0;
 
-
-        
-
-        return new Object[] {words, counts};
+        public WordsAndCounts walk_trie_nodes() {
+            walk_trie_node_recurse(0);
+            return results;
+        }
     }
 }
