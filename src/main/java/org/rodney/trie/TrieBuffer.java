@@ -21,13 +21,14 @@ package org.rodney.trie;
 public class TrieBuffer {
 
     private static final boolean CHECKS = true;
-    protected static final char CHAR_0 = (char)0;
-    protected static final char BIG_A = 'A';
-    protected static final char BIG_Z = 'Z';
+    protected static final byte CHAR_0 = 0;
+    protected static final byte BIG_A = (byte)'A';
+    protected static final byte BIG_Z = (byte)'Z';
     
-    protected static final char LITTLE_A = 'a';
-    protected static final char LITTLE_Z = 'z';
-    
+    protected static final byte LITTLE_A = (byte)'a';
+    protected static final byte LITTLE_Z = (byte)'z';
+
+    protected static final byte SPACE_CHAR = (byte)' ';
     protected static final int LETTERS_ARRAY_SIZE = LITTLE_Z-LITTLE_A+1; // 26*2 === 52 bytes next letter indices
     protected static final int COUNTER_ARRAY_SIZE = 2; // 2*2 === 4 bytes word counter
     
@@ -47,7 +48,11 @@ public class TrieBuffer {
     // index of next Trie node to be allocated in trie_buffer.
     // the actual offset of the allocated trie node is next_trie_node_allocation_index*TRIE_ENTRY_ARRAY_SIZE
     protected char next_trie_node_allocation_index = 1;
-    
+
+    /**
+     * Initialize the TrieBuffer
+     * @param capacity max number of trie nodes in this buffer.
+     */
     public TrieBuffer(int capacity) {
         this.capacity = capacity;
         this.trie_buffer = new char[capacity*TRIE_ENTRY_ARRAY_SIZE];
@@ -69,7 +74,7 @@ public class TrieBuffer {
      * @param lower_letter a lower case letter 'a'..'z'
      * @return
      */
-    public static final int compute_trie_node_letter_offset(char trie_index, char lower_letter) {
+    public static final int compute_trie_node_letter_offset(char trie_index, byte lower_letter) {
         return compute_trie_buffer_offset(trie_index)+(lower_letter-LITTLE_A);
     }
 
@@ -101,10 +106,10 @@ public class TrieBuffer {
      * @param c
      * @return CHAR_0, or 'a'..'z'
      */
-    public static final char to_lower_case(char c) {
-        char c_lower = c;
+    public static final byte to_lower_case(byte c) {
+        byte c_lower = c;
         if (c_lower>=BIG_A && c_lower<=BIG_Z) {
-            c_lower = (char)(LITTLE_A + (c_lower-BIG_A));
+            c_lower = (byte)(LITTLE_A + (c_lower-BIG_A));
         }
         if (c_lower<LITTLE_A || c_lower>LITTLE_Z) {
             c_lower = CHAR_0;
@@ -122,9 +127,9 @@ public class TrieBuffer {
      * @param next_letter will be converted to a lower case Ascii letter
      * @return 0 if next_letter was not alphabetic, else the logical index of the next trie node
      */
-    public char get_next_trie(char current_trie_node_index, char next_letter) {
+    public char get_next_trie(char current_trie_node_index, byte next_letter) {
         // convert next_letter to lower case
-        char next_letter_lower = to_lower_case(next_letter);
+        byte next_letter_lower = to_lower_case(next_letter);
 
         // if next_letter is not valid, do not advance to next trie node
         if (next_letter_lower==CHAR_0) {
@@ -154,6 +159,36 @@ public class TrieBuffer {
         return next_trie_node_index;
     }
 
+    public static final boolean is_space(byte b) {
+        return b<=SPACE_CHAR;
+    }
+
+    /**
+     * Inserts next character into the TrieBuffer. If the next_character
+     * <br/>
+     * Note that if parse_next_char() returns a non-zero return value on the last character in a buffer,
+     * then you will have to call increment_trie_node_count() on the return value for the last character.
+     * @param current_trie_index 0 for first character in a word else the logical trie node index returned by the previous
+     *                   invocation of parse_next_char()
+     * @param next_char the next character
+     * @return logical trie node index after inserting next_char;
+     */
+    public char parse_next_char(char current_trie_index, byte next_char) {
+        // skip over spaces
+        if (is_space(next_char)) {
+            if (current_trie_index!=CHAR_0) {
+                // if space char and we are in a word ... then increment word count and reset current_trie_index to zero
+                increment_trie_node_count(current_trie_index);
+                current_trie_index = 0;
+            } //endif current_trie_index!=CHAR_0
+            // else skip this space char
+        } else {
+            // not a space char add it to trie buffer
+            current_trie_index = get_next_trie(current_trie_index, next_char);
+        } //endelse is_space(b)
+        return current_trie_index;
+    }
+
     /**
      * Insert a word into the TrieBuffer
      * @param word a word; alphabetic characters are converted to lower case; non-alphabetic characters are skipped
@@ -166,7 +201,7 @@ public class TrieBuffer {
         char curr_trie_index = 0;
         for (int i=0;i<chars.length;i++) {
             // insert it into the TrieBuffer
-            curr_trie_index = get_next_trie(curr_trie_index, chars[i]);
+            curr_trie_index = get_next_trie(curr_trie_index, (byte)chars[i]);
         }
         // curr_trie_index is the trie node for the last character in the word;
         // this is where the word's word count will be maintained

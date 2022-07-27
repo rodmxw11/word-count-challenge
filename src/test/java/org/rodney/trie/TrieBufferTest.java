@@ -19,29 +19,30 @@ public class TrieBufferTest {
     @Test
     public void to_lower_caseTest() {
         // lower case letters are not changed
-        for (char c=LITTLE_A;c<=LITTLE_Z;c++) {
+        for (byte c=LITTLE_A;c<=LITTLE_Z;c++) {
             assertEquals(c, to_lower_case(c));
         }
         // upper case letters are converted to lower case
-        for (char c=BIG_A;c<=BIG_Z;c++) {
+        for (byte c=BIG_A;c<=BIG_Z;c++) {
             assertEquals(Character.toLowerCase(c), to_lower_case(c) );
         }
         // all other characters return 0
-        for (char c=0;c<512;c++) {
-            if (c>=LITTLE_A && c<=LITTLE_Z) {
+        for (char c=0;c<256;c++) {
+            byte b = (byte)c;
+            if (b>=LITTLE_A && c<=LITTLE_Z) {
                 continue;
             }
-            if (c>=BIG_A && c<=BIG_Z) {
+            if (b>=BIG_A && b<=BIG_Z) {
                 continue;
             }
-            assertEquals(CHAR_0, to_lower_case(c));
+            assertEquals(CHAR_0, to_lower_case(b));
         }
     }
 
     @Test
     public void get_next_trieTest_0001() {
         TrieBuffer trie = new TrieBuffer(2);
-        char next_trie_node_index = trie.get_next_trie((char)0, 'a');
+        char next_trie_node_index = trie.get_next_trie((char)0, (byte)'a');
         assertEquals(1, next_trie_node_index);
         assertEquals(2, trie.next_trie_node_allocation_index);
         assertEquals(1, trie.trie_buffer[0]); // letter 'a' points to trie node #1
@@ -51,7 +52,7 @@ public class TrieBufferTest {
 
         // can not allocate a trie node past capacity
         try {
-            char next_trie = trie.get_next_trie(next_trie_node_index, 'b');
+            char next_trie = trie.get_next_trie(next_trie_node_index, (byte)'b');
             fail();
         } catch (ArrayIndexOutOfBoundsException ex) {
         }
@@ -60,7 +61,7 @@ public class TrieBufferTest {
     @Test
     public void increment_trie_node_countTest() {
         TrieBuffer trie = new TrieBuffer(2);
-        char next_trie_node_index = trie.get_next_trie((char)0, 'i');
+        char next_trie_node_index = trie.get_next_trie((char)0, (byte)'i');
         trie.increment_trie_node_count(next_trie_node_index);
         assertEquals(1, trie.trie_buffer[next_trie_node_index*TRIE_ENTRY_ARRAY_SIZE+COUNTER_LOW_OFFSET]);
         assertEquals(1, trie.word_count);
