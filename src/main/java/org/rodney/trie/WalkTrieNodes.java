@@ -4,6 +4,9 @@ import static org.rodney.trie.TrieBuffer.*;
 
 
 public class WalkTrieNodes {
+
+    private static final int LONGEST_ENGLISH_WORD_LENGTH = 50;
+    TrieBuffer trie_local;
     char[] trie_buffer_local;
     int word_count;
     char[] char_stack;
@@ -13,16 +16,10 @@ public class WalkTrieNodes {
     public WalkTrieNodes(
             TrieBuffer trie_buffer
     ) {
-        trie_buffer_local = trie_buffer.trie_buffer;
-        word_count = trie_buffer.word_count;
-        char_stack = new char[word_count];
-        results = new WordsAndCounts(word_count);
+        trie_local = trie_buffer;
     }
 
     public void walk_trie_node_recurse(char node_index) {
-        if (node_index==CHAR_0) {
-            return;
-        }
         int node_start = compute_trie_buffer_offset(node_index);
         int word_count =
                 (trie_buffer_local[node_start+LETTERS_ARRAY_SIZE]<<16)
@@ -52,7 +49,13 @@ public class WalkTrieNodes {
     }
 
     public WordsAndCounts walk_trie_nodes() {
+        word_count = trie_local.word_count;
+        trie_buffer_local = trie_local.trie_buffer;
+        char_stack = new char[LONGEST_ENGLISH_WORD_LENGTH];
+        results = new WordsAndCounts(word_count);
+
         walk_trie_node_recurse((char)0);
+        results.sort_by_count_descending();
         return results;
     }
 }

@@ -58,6 +58,10 @@ public class TrieBuffer {
         this.trie_buffer = new char[capacity*TRIE_ENTRY_ARRAY_SIZE];
     }
 
+    public int getWordCount() {
+        return word_count;
+    }
+
     /**
      * Given a logic trie node index, compute its offset in trie_buffer array
      * @param trie_index
@@ -160,7 +164,7 @@ public class TrieBuffer {
     }
 
     public static final boolean is_space(byte b) {
-        return b<=SPACE_CHAR;
+        return b>=0 && b<=SPACE_CHAR;
     }
 
     /**

@@ -2,8 +2,13 @@ package org.rodney.trie;
 
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.rodney.trie.TrieBuffer.*;
+import static org.rodney.trie.TrieTestData.*;
 
 public class TrieBufferTest {
     @Test
@@ -121,5 +126,43 @@ public class TrieBufferTest {
         assertEquals(1, trie.word_count);
         assertEquals(0, trie.trie_buffer[compute_trie_node_count_low_offset(trie_index)]);
         assertEquals(1, trie.trie_buffer[compute_trie_node_count_hi_offset(trie_index)]);
+    }
+
+    @Test
+    public void is_spaceTest() {
+        for (int i=0;i<255;i++) {
+            if (i>=0 && i<=SPACE_CHAR) {
+                assertTrue(is_space((byte)i),"expected TRUE i="+i);
+            } else {
+                assertFalse(is_space((byte)i), "expected FALSE i="+i);
+            }
+        }
+    }
+
+    @Test
+    public void parse_next_charTest0001() {
+        TrieBuffer trie = new TrieBuffer(200);
+        char curr_trie_node_index = 0;
+        for (int i=0;i<joined_buffer.length;i++) {
+            curr_trie_node_index = trie.parse_next_char(
+                    curr_trie_node_index,
+                    joined_buffer[i]
+            );
+        }
+        // assume the last char in joined_buffer is not space char
+        assertNotEquals(0, curr_trie_node_index);
+
+        int current_word_count = trie.word_count;
+        curr_trie_node_index = trie.parse_next_char(curr_trie_node_index, SPACE_CHAR);
+        assertEquals(current_word_count+1, trie.word_count);
+        assertEquals(0, curr_trie_node_index);
+
+        for (int i=0;i<200;i++) {
+            curr_trie_node_index = trie.parse_next_char(curr_trie_node_index,SPACE_CHAR);
+            assertEquals(0, curr_trie_node_index);
+            assertEquals(current_word_count+1, trie.word_count);
+        }
+
+
     }
 }

@@ -24,6 +24,10 @@ public class WordsAndCounts {
         counts = new int[size];
     }
 
+    public int getWordCount() {
+        return word_index;
+    }
+
     /**
      * Add a word and word count into the buffer
      * @param word
